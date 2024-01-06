@@ -72,6 +72,13 @@ describe('Paths module', () => {
 		});
 
 		it('strips relative paths', () => {
+			const filepath = './fixtures/existing/path';
+			const basedir = './fixtures';
+			const result = stripBasedir(filepath, basedir);
+			assert.equal(result, 'existing/path');
+		});
+
+		it('strips relative paths', () => {
 			const filepath = '../shared/templates/README.md';
 			const basedir = '../shared/templates';
 			const result = stripBasedir(filepath, basedir);
