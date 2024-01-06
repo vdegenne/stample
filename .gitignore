@@ -1,3 +1,4 @@
 node_modules
 .wireit
 lib
+test-temp-dir

@@ -3,9 +3,15 @@ import {
 	PlaceholderInfo,
 	extractPlaceholdersFromContent,
 } from './placeholders.js';
-import {dirname as _dirname, createDirectory, pathlib} from './paths.js';
+import {
+	dirname as _dirname,
+	basename as _basename,
+	createDirectory,
+	isAbsolute,
+	stripBasedir,
+} from './paths.js';
 
-type FileType = 'file' | 'directory';
+export type FileType = 'file' | 'directory';
 
 export class File {
 	#path: string;
@@ -17,8 +23,32 @@ export class File {
 
 	#destination: File | undefined;
 
-	constructor(path: string) {
+	#base: string | undefined;
+
+	setBase(base: string) {
+		this.#base = base;
+	}
+
+	basename() {
+		return _basename(this.#path);
+	}
+	dirname() {
+		return _dirname(this.#path);
+	}
+
+	resolvePath() {
+		return stripBasedir(this.#path, this.#base);
+	}
+	resolveDirname() {
+		return _dirname(this.resolvePath());
+	}
+	resolveDestinationPath() {
+		return;
+	}
+
+	constructor(path: string, base = '.') {
 		this.#path = path;
+		this.setBase(base);
 	}
 
 	set path(newPath: string) {
@@ -34,6 +64,10 @@ export class File {
 
 	get type() {
 		return this.#type;
+	}
+
+	get isAbsolute() {
+		return isAbsolute(this.#path);
 	}
 
 	/**
@@ -142,8 +176,8 @@ export class File {
 		this.#type = this.isFile(force)
 			? 'file'
 			: this.isDirectory()
-				? 'directory'
-				: undefined;
+			? 'directory'
+			: undefined;
 		this.#contents = await this.getContents(force);
 		this.#loaded = true;
 	}
@@ -172,9 +206,22 @@ export class File {
 		}
 	}
 
-	setDestination(existingPath: string) {
-		// const dir =
-		throw new Error('Method not implemented.');
+	/**
+	 * Can only be a directory.
+	 * The directory can already exists.
+	 * If it doesn't exist it'll be created during copy process.
+	 *
+	 * @param path path to copy destination
+	 */
+	setDestination(path: string) {
+		const file = new File(path);
+
+		if (file.exists() && file.isFile()) {
+			throw new Error(
+				'destination path exists and is a file, it should be a directory where to copy the templates.'
+			);
+		}
+		// Should create it yet, unless it's really needed
 	}
 
 	// destinationDirpathExists() {
@@ -203,4 +250,8 @@ export class File {
 	// 		return undefined;
 	// 	}
 	// }
+
+	copy(filename?: string) {
+		throw new Error('To implement');
+	}
 }
