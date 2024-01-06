@@ -1,0 +1,54 @@
+{
+	"name": "stample",
+	"version": "1.0.0",
+	"description": "",
+	"type": "module",
+	"main": "./lib/index.js",
+	"scripts": {
+		"build": "wireit",
+		"test": "wireit"
+	},
+	"wireit": {
+		"build": {
+			"dependencies": [
+				"build:ts"
+			]
+		},
+		"build:ts": {
+			"command": "tsc --pretty",
+			"clean": "if-file-deleted",
+			"files": [
+				"tsconfig.json",
+				"src"
+			],
+			"output": [
+				"lib"
+			]
+		},
+		"test": {
+			"command": "mkdir test-temp-dir && mocha lib/test/**/*_test.js",
+			"output": [
+				"test-temp-dir"
+			],
+			"files": [
+				"fixtures"
+			],
+			"dependencies": [
+				"build"
+			]
+		}
+	},
+	"author": "Valentin Degenne",
+	"license": "MIT",
+	"devDependencies": {
+		"@types/chai": "^4.3.11",
+		"@types/mocha": "^10.0.6",
+		"chai": "^5.0.0",
+		"mocha": "^10.2.0",
+		"typescript": "^5.3.3",
+		"wireit": "^0.14.1"
+	},
+	"dependencies": {
+		"@inquirer/prompts": "^3.3.0"
+	}
+}

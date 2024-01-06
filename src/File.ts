@@ -1,0 +1,206 @@
+import fs from 'fs';
+import {
+	PlaceholderInfo,
+	extractPlaceholdersFromContent,
+} from './placeholders.js';
+import {dirname as _dirname, createDirectory, pathlib} from './paths.js';
+
+type FileType = 'file' | 'directory';
+
+export class File {
+	#path: string;
+	#loaded = false;
+
+	#exists: boolean | undefined;
+	#type: FileType | undefined;
+	#contents: string | undefined;
+
+	#destination: File | undefined;
+
+	constructor(path: string) {
+		this.#path = path;
+	}
+
+	set path(newPath: string) {
+		const old = this.#path;
+		this.#path = newPath;
+		if (old !== newPath) {
+			this.reload();
+		}
+	}
+	get path() {
+		return this.#path;
+	}
+
+	get type() {
+		return this.#type;
+	}
+
+	/**
+	 * Returns preloaded contents if any,
+	 * use `getContents` to request contents if not preloaded.
+	 */
+	get contents() {
+		return this.#contents;
+	}
+
+	exists(force = false): boolean {
+		if (this.#loaded && !force) {
+			return this.#exists;
+		}
+		try {
+			return fs.existsSync(this.#path);
+		} catch {
+			return false;
+		}
+	}
+
+	isFile(force = false): boolean | undefined {
+		if (this.#loaded && !force) {
+			if (!this.#exists) {
+				return undefined;
+			}
+			return this.#type === 'file';
+		}
+		if (!this.exists(force)) {
+			return undefined;
+		}
+		try {
+			const stats = fs.statSync(this.#path);
+			return stats.isFile();
+		} catch (error) {
+			console.error("can't determine if it's a file");
+			return undefined;
+		}
+	}
+
+	isDirectory(force = false): boolean | undefined {
+		if (this.#loaded && !force) {
+			if (!this.#exists) {
+				return undefined;
+			}
+			return this.#type === 'directory';
+		}
+		if (!this.exists(force)) {
+			return undefined;
+		}
+		try {
+			const stats = fs.statSync(this.#path);
+			return stats.isDirectory();
+		} catch (error) {
+			console.error("can't determine if it's a directory");
+			return undefined;
+		}
+	}
+
+	async getContents(force = false): Promise<string | undefined> {
+		if (!this.isFile(force)) {
+			return null;
+		}
+
+		if (this.#loaded && !force) {
+			if (!this.exists(force)) {
+				return undefined;
+			}
+
+			return this.#contents;
+		}
+
+		if (!this.exists(force)) {
+			return undefined;
+		}
+		try {
+			const data = await fs.promises.readFile(this.#path, 'utf-8');
+			return data;
+		} catch (error) {
+			console.error('Error reading file:', error);
+			return undefined;
+		}
+	}
+
+	flush() {
+		this.#exists = undefined;
+		this.#type = undefined;
+		this.#contents = undefined;
+		this.#loaded = false;
+	}
+
+	async reload() {
+		this.flush();
+		await this.preload();
+	}
+
+	async preload(force = false) {
+		if (this.#loaded && !force) {
+			return;
+		}
+		this.#exists = this.exists(force);
+		if (!this.#exists) {
+			this.flush();
+			return;
+		}
+		this.#type = this.isFile(force)
+			? 'file'
+			: this.isDirectory()
+				? 'directory'
+				: undefined;
+		this.#contents = await this.getContents(force);
+		this.#loaded = true;
+	}
+
+	isPreloaded() {
+		return this.#loaded;
+	}
+
+	async getPlaceholders(): Promise<PlaceholderInfo[]> {
+		if (!this.#loaded) {
+			await this.preload();
+		}
+		const content = this.#contents;
+		if (!content) {
+			return;
+		}
+
+		return extractPlaceholdersFromContent(content);
+	}
+
+	async createPath() {
+		if (this.exists(true)) {
+			throw new Error("Can't create, the file already exists.");
+		} else {
+			await createDirectory(this.path);
+		}
+	}
+
+	setDestination(existingPath: string) {
+		// const dir =
+		throw new Error('Method not implemented.');
+	}
+
+	// destinationDirpathExists() {
+	// 	if (!this.#destination) {
+	// 		return undefined;
+	// 	}
+	// 	try {
+	// 		const sourceDirname = _dirname(this.#path);
+	// 		// const destinationDirname = _dirname(this.destination);
+	// 		const resolvedDirpath = pathlib.join(this.#destination, sourceDirname);
+	// 		console.log(resolvedDirpath);
+	//
+	// 		return fs.existsSync(resolvedDirpath);
+	// 	} catch (_err) {
+	// 		return undefined;
+	// 	}
+	// }
+
+	// destinationExists() {
+	// 	if (!this.#destination) {
+	// 		return undefined;
+	// 	}
+	// 	try {
+	// 		return fs.existsSync(this.#destination);
+	// 	} catch (_err) {
+	// 		return undefined;
+	// 	}
+	// }
+}
