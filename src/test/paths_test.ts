@@ -1,12 +1,5 @@
 import {assert} from 'chai';
-import {
-	basename,
-	createDirectory,
-	dirname,
-	glob,
-	pathlib,
-	stripBasedir,
-} from '../paths.js';
+import {basename, createDirectory, dirname, glob} from '../paths.js';
 import fs from 'fs';
 import {createTestDir, removeTestDir} from './utils.js';
 
@@ -61,43 +54,6 @@ describe('Paths module', () => {
 			assert.isFalse(fs.existsSync(path));
 			await createDirectory(path);
 			assert.isTrue(fs.existsSync(path));
-		});
-	});
-
-	describe('stripBasedir', () => {
-		it('strips relative paths', () => {
-			const filepath = './fixtures/existing/path';
-			const basedir = 'fixtures';
-			const result = stripBasedir(filepath, basedir);
-			assert.equal(result, 'existing/path');
-		});
-
-		it('strips relative paths', () => {
-			const filepath = './fixtures/existing/path';
-			const basedir = './fixtures';
-			const result = stripBasedir(filepath, basedir);
-			assert.equal(result, 'existing/path');
-		});
-
-		it('strips relative paths', () => {
-			const filepath = '../shared/templates/README.md';
-			const basedir = '../shared/templates';
-			const result = stripBasedir(filepath, basedir);
-			assert.equal(result, 'README.md');
-		});
-
-		it('works for directories', () => {
-			const filepath = '../shared/templates';
-			const basedir = '../shared/templates/';
-			const result = stripBasedir(filepath, basedir);
-			assert.equal(result, '');
-		});
-
-		it('does not account for trailing slashes', () => {
-			const filepath = '../shared/templates/README.md';
-			const basedir = '../shared/templates/';
-			const result = stripBasedir(filepath, basedir);
-			assert.equal(result, 'README.md');
 		});
 	});
 

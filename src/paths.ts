@@ -22,16 +22,16 @@ export async function createDirectory(dirpath: string): Promise<void> {
 	}
 }
 
-export function stripBasedir(filepath: string, basedir: string): string {
-	if (isAbsolute(filepath)) {
-		return filepath;
-	}
-	const resolvedFilePath = path.resolve(filepath);
-	const resolvedBaseDir = path.resolve(basedir);
-
-	const relativePath = path.relative(resolvedBaseDir, resolvedFilePath);
-	return relativePath;
-}
+// export function stripBasedir(filepath: string, basedir: string): string {
+// 	if (isAbsolute(filepath)) {
+// 		return filepath;
+// 	}
+// 	const resolvedFilePath = path.resolve(filepath);
+// 	const resolvedBaseDir = path.resolve(basedir);
+//
+// 	const relativePath = path.relative(resolvedBaseDir, resolvedFilePath);
+// 	return relativePath;
+// }
 
 export async function glob(source: string | string[], cwd = '.') {
 	return await FastGlob(source, {cwd, absolute: true});

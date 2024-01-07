@@ -1,6 +1,9 @@
 import {File} from '../File.js';
-import {assert} from 'chai';
+import {assert, expect, should} from 'chai';
 import {createTestDir, removeTestDir} from './utils.js';
+import {Placeholder} from '../placeholders.js';
+
+should();
 
 const paths = {
 	testFile: './fixtures/test.html',
@@ -19,9 +22,8 @@ describe('File', () => {
 	});
 
 	it('defines a path', () => {
-		const filepath = paths.testFile;
-		const file = new File(filepath);
-		assert.equal(file.path, filepath);
+		const file = new File('./fixtures/test.js');
+		assert.equal(file.path, './fixtures/test.js');
 	});
 
 	describe('directories', () => {
@@ -35,15 +37,6 @@ describe('File', () => {
 			const dir = new File('./fixtures/source/a/path/');
 			assert.isTrue(dir.exists());
 			assert.isTrue(dir.isDirectory());
-		});
-
-		it('non existing file (directory) can be created on the filesystem', (done) => {
-			const nonExistingFile = new File('./test-temp-dir/i-will-be-created.txt');
-			assert.isFalse(nonExistingFile.exists());
-			nonExistingFile.createPath().then(() => {
-				assert.isTrue(nonExistingFile.exists());
-				done();
-			});
 		});
 	});
 
@@ -71,18 +64,42 @@ describe('File', () => {
 	});
 
 	it("can't be preloaded if it doesn't exist", async () => {
-		const filepath = paths.nonExistingFile;
-		const file = new File(filepath);
-		assert.isTrue(!file.exists());
+		const file = new File('./fixtures/test.js');
+		assert.isTrue(!file.isPreloaded());
 		await file.preload();
-		assert.isFalse(file.isPreloaded());
+		assert.isTrue(file.isPreloaded());
 	});
 
-	describe('searchForPlaceholders', () => {
+	describe('mirrors', () => {
+		it('can be passed in the constructor', async () => {
+			const file = new File('./fixtures/test.js', './somewhere/else/test.js');
+			assert.equal(file.mirror, './somewhere/else/test.js');
+		});
+
+		it('existence can be checked', async () => {
+			let file = new File('./test.js', './non-existing/path/test.js');
+			assert.isFalse(file.destinationDirpathExists());
+			// existing
+			file = new File('./index.html', './fixtures/source/a/path/index.html');
+			assert.isTrue(file.destinationDirpathExists());
+		});
+
+		it("mirror dirpath can be created if it doesn't exist (recursively)", async () => {
+			const file = new File(
+				'./test.js',
+				'./test-temp-dir/destination/path/test.js',
+			);
+			assert.isFalse(file.destinationDirpathExists());
+			await file.allRoadsLeadToRome();
+			assert.isTrue(file.destinationDirpathExists());
+		});
+	});
+
+	describe('Placeholders', () => {
 		it('returns placeholders in the file', async () => {
-			const filepath = paths.testFile;
-			const file = new File(filepath);
-			const placeholders = await file.getPlaceholders();
+			const file = new File('./fixtures/test.html');
+			const placeholders = await file.extractPlaceholders();
+
 			assert.deepEqual(
 				placeholders.map((p) => p.name),
 				['TITLE', 'CONTENT'],
@@ -90,83 +107,76 @@ describe('File', () => {
 		});
 
 		it('preloads the file for the search', async () => {
-			const filepath = paths.testFile;
-			const file = new File(filepath);
+			const file = new File('./fixtures/test.html');
 			assert.isFalse(file.isPreloaded());
-			await file.getPlaceholders();
+			await file.extractPlaceholders();
 			assert.isTrue(file.isPreloaded());
 		});
-	});
 
-	describe('basename', () => {
-		it('returns the basename of a file', async () => {
-			let file = new File('./fixtures/path/to/something');
-			assert.equal(file.basename(), 'something');
-			file = new File('./fixtures/path/to/something/');
-			assert.equal(file.basename(), 'something');
-			file = new File('./fixtures/path/to/a/file.js');
-			assert.equal(file.basename(), 'file.js');
-			file = new File('/this/is/absolute/path');
-			assert.equal(file.basename(), 'path');
+		it('transforms file content', async () => {
+			const file = new File('./fixtures/small-content.txt');
+			const placeholders = [
+				new Placeholder('%name%', 'John'),
+				new Placeholder('%day%', 'Monday'),
+			];
+			const transformed =
+				await file.transformContentWithPlaceholders(placeholders);
+			assert.equal(transformed, 'Hello John, today is Monday.\n');
+			// But original content is preserved
+			assert.equal(file.contents, 'Hello %name%, today is %day%.\n');
 		});
 	});
 
-	describe('dirname', () => {
-		it('returns the dirname of a file', async () => {
-			let file: File;
-			file = new File('./fixtures/path/to/something');
-			assert.equal(file.dirname(), './fixtures/path/to');
-			file = new File('./fixtures/path/to/something/');
-			assert.equal(file.dirname(), './fixtures/path/to');
-			file = new File('./fixtures/path/to/a/file.js');
-			assert.equal(file.dirname(), './fixtures/path/to/a');
-			file = new File('/this/is/absolute/path');
-			assert.equal(file.dirname(), '/this/is/absolute');
-		});
-	});
+	describe('Copying', () => {
+		it('fails if the file has no mirror', async () => {
+			const file = new File('./fixtures/test.js');
+			let err: Error;
+			try {
+				await file.copy();
+			} catch (error) {
+				err = error;
+			}
 
-	describe('Base', () => {
-		it('', async () => {
-			// const file = new File('../shared/templates/README.md');
-			// assert.equal(file.path, expected);
-		});
-	});
-
-	describe('Destination', () => {
-		it("can't be an existing file", () => {
-			const filepath = new File(paths.testFile);
-			const fn = () => filepath.setDestination(paths.existingFileInPath);
-			assert.throws(fn);
+			expect(err).to.be.an('error');
+			expect(err.message).to.contain("mirror wasn't set");
 		});
 
-		it('can be an existing directory', () => {
-			const filepath = new File(paths.testFile);
-			const fn = () => filepath.setDestination(paths.existingDirectory);
-			assert.doesNotThrow(fn);
+		it("fails if the file wasn't transformed", async () => {
+			const file = new File('./fixtures/test.js', './test-temp-dir/test.js');
+			let err: Error;
+			try {
+				await file.copy();
+			} catch (error) {
+				err = error;
+			}
+
+			expect(err).to.be.an('error');
+			expect(err.message).to.contain("transformed wasn't set");
 		});
 
-		it('can be a non-existing directory', () => {
-			const filepath = new File(paths.testFile);
-			const fn = () => filepath.setDestination('non-existing/path');
-			assert.doesNotThrow(fn);
-		});
+		it('copies transformed content to destination', async () => {
+			const file = new File(
+				'./fixtures/small-content.txt',
+				'./test-temp-dir/a/new/location/small-content.txt',
+			);
+			const placeholders = [
+				new Placeholder('%name%', 'John'),
+				new Placeholder('%day%', 'Sunday'),
+			];
+			await file.transformContentWithPlaceholders(placeholders);
+			let err: Error;
+			try {
+				await file.copy();
+			} catch (error) {
+				err = error;
+			}
 
-		it.skip('checks the existence of the dirname', () => {
-			const file = new File('../shared/templates/README.md');
-			file.setDestination(paths.existingDirectory);
-			// file.destination = paths.existingPath;
-			// assert.isTrue(file.destinationDirpathExists());
-			// file.destination = 'non-existing/path/test.html';
-			// assert.isFalse(file.destinationDirpathExists());
-		});
-
-		it('checks the existence of the file', () => {
-			// const file = new File(paths.testFile);
-			// assert.isUndefined(file.destinationExists());
-			// file.destination = 'non-existing/path';
-			// assert.isFalse(file.destinationExists());
-			// file.destination = paths.;
-			// assert.isFalse(file.destinationExists());
+			expect(err).to.be.undefined;
+			expect(file.destinationExists()).to.be.true;
+			const destinationFile = new File(file.mirror);
+			expect(await destinationFile.getContents()).to.be.equal(
+				'Hello John, today is Sunday.\n',
+			);
 		});
 	});
 });

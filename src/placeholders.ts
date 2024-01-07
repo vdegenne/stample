@@ -1,39 +1,88 @@
 import {input} from '@inquirer/prompts';
+import type {File} from './File.js';
 
 export const PLACEHOLDER_REGEX = /\%([^%]+)\%/g;
 
-export interface PlaceholderInfo {
+export class Placeholder {
 	/**
 	 * Raw placeholder value, e.g. '%TITLE%'
 	 */
-	placeholder: string;
+	value: string;
+
 	/**
 	 * Name of the placeholder, e.g. `TITLE`
 	 * It is usually the `placeholder` value without the surrounding %'s
 	 */
-	name: string;
+	get name() {
+		return this.value.replaceAll('%', '').trim();
+	}
 	/**
 	 * Used to determine what to replace placeholder with in transform functions.
 	 */
 	resolveTo?: string;
+
+	constructor(value: string, resolveTo?: string) {
+		this.value = value;
+		this.resolveTo = resolveTo;
+	}
 }
 
-export function extractPlaceholdersFromContent(
-	content: string
-): PlaceholderInfo[] {
-	const placeholders: PlaceholderInfo[] = [];
+export function extractPlaceholdersFromContent(content: string): Placeholder[] {
+	const placeholders: Placeholder[] = [];
 	const matches = content.matchAll(PLACEHOLDER_REGEX);
 	for (const match of matches) {
-		const name = match[1];
-		if (placeholders.findIndex((p) => p.name === name) >= 0) {
+		const value = match[0];
+		if (placeholders.some((p) => p.value == value)) {
 			continue;
 		}
-		placeholders.push({
-			placeholder: `%${name}%`,
-			name,
-		});
+		placeholders.push(new Placeholder(value));
 	}
 	return placeholders;
+}
+
+/**
+ * Takes a list of File objects and returns all placeholders found.
+ */
+export async function extractAllPlaceholdersFromFilesList(files: File[]) {
+	const placeholders: Placeholder[] = [];
+	for (const file of files) {
+		const phs = await file.extractPlaceholders();
+		for (const ph of phs) {
+			if (placeholders.some((p) => p.name === ph.name)) {
+				continue;
+			}
+			placeholders.push(ph);
+		}
+	}
+	return placeholders;
+}
+
+export function mergePlaceholders(set1: Placeholder[], set2: Placeholder[]) {
+	const newSet: Placeholder[] = set1.concat(set2);
+	return makePlaceholdersDistinct(newSet);
+}
+
+export function makePlaceholdersDistinct(placeholders: Placeholder[]) {
+	const distinct: Placeholder[] = [];
+	for (const p of placeholders) {
+		let alreadyExist = distinct.find((q) => q.value == p.value);
+		if (alreadyExist) {
+			if (!alreadyExist.resolveTo && p.resolveTo) {
+				alreadyExist.resolveTo = p.resolveTo;
+			}
+			continue;
+		} else {
+			distinct.push(p);
+		}
+	}
+	return distinct;
+}
+
+export function getMissingPlaceholdersFromContent(
+	content: string,
+	placeholders: Placeholder[],
+) {
+	// const placeholdersFromContent =
 }
 
 /**
@@ -42,8 +91,8 @@ export function extractPlaceholdersFromContent(
  *
  * @param placeholders List of placeholders to resolve
  */
-export async function askUserForPlaceHolders(placeholders: PlaceholderInfo[]) {
-	const map: PlaceholderInfo[] = [];
+export async function askUserForPlaceHolders(placeholders: Placeholder[]) {
+	const map: Placeholder[] = [];
 	for (const placeholder of placeholders) {
 		const answer = await input({
 			message: placeholder.name,
@@ -54,16 +103,13 @@ export async function askUserForPlaceHolders(placeholders: PlaceholderInfo[]) {
 
 export function transformContentWithPlaceholders(
 	content: string,
-	placeholders: PlaceholderInfo[]
+	placeholders: Placeholder[],
 ) {
 	for (const placeholder of placeholders) {
 		if (!placeholder.resolveTo) {
 			return;
 		}
-		content = content.replaceAll(
-			placeholder.placeholder,
-			placeholder.resolveTo
-		);
+		content = content.replaceAll(placeholder.value, placeholder.resolveTo);
 	}
 	return content;
 }

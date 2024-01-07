@@ -1,14 +1,16 @@
 import fs from 'fs';
 import {
-	PlaceholderInfo,
+	Placeholder,
+	askUserForPlaceHolders,
 	extractPlaceholdersFromContent,
+	transformContentWithPlaceholders,
 } from './placeholders.js';
 import {
 	dirname as _dirname,
 	basename as _basename,
 	createDirectory,
 	isAbsolute,
-	stripBasedir,
+	pathlib,
 } from './paths.js';
 
 export type FileType = 'file' | 'directory';
@@ -20,14 +22,9 @@ export class File {
 	#exists: boolean | undefined;
 	#type: FileType | undefined;
 	#contents: string | undefined;
+	#transformed: string | undefined;
 
-	#destination: File | undefined;
-
-	#base: string | undefined;
-
-	setBase(base: string) {
-		this.#base = base;
-	}
+	#mirror: string | undefined;
 
 	basename() {
 		return _basename(this.#path);
@@ -35,9 +32,9 @@ export class File {
 	dirname() {
 		return _dirname(this.#path);
 	}
-	constructor(path: string, base = '.') {
+	constructor(path: string, destination?: string) {
 		this.#path = path;
-		this.setBase(base);
+		this.#mirror = destination;
 	}
 
 	set path(newPath: string) {
@@ -65,6 +62,9 @@ export class File {
 	 */
 	get contents() {
 		return this.#contents;
+	}
+	get transformed() {
+		return this.#transformed;
 	}
 
 	exists(force = false): boolean {
@@ -175,7 +175,7 @@ export class File {
 		return this.#loaded;
 	}
 
-	async getPlaceholders(): Promise<PlaceholderInfo[]> {
+	async extractPlaceholders(): Promise<Placeholder[]> {
 		if (!this.#loaded) {
 			await this.preload();
 		}
@@ -187,60 +187,73 @@ export class File {
 		return extractPlaceholdersFromContent(content);
 	}
 
-	async createPath() {
-		if (this.exists(true)) {
-			throw new Error("Can't create, the file already exists.");
-		} else {
-			await createDirectory(this.path);
+	set mirror(value: string) {
+		this.#mirror = value;
+	}
+	get mirror() {
+		return this.#mirror;
+	}
+
+	destinationDirpathExists() {
+		if (!this.#mirror) {
+			return undefined;
 		}
+		const dirpath = pathlib.dirname(this.#mirror);
+		return fs.existsSync(dirpath);
+	}
+
+	destinationExists() {
+		if (!this.#mirror) {
+			return undefined;
+		}
+		return fs.existsSync(this.#mirror);
+	}
+
+	async allRoadsLeadToRome() {
+		if (this.#mirror) {
+			const dirpath = pathlib.dirname(this.#mirror);
+			if (!fs.existsSync(dirpath)) {
+				await createDirectory(dirpath);
+			}
+		}
+	}
+
+	async transformContentWithPlaceholders(placeholders: Placeholder[]) {
+		if (!this.exists()) {
+			return;
+		}
+		if (!this.#contents) {
+			await this.preload();
+		}
+		const content = this.#contents;
+		if (!content) {
+			return;
+		}
+		this.#transformed = content;
+		this.#transformed = transformContentWithPlaceholders(
+			this.#transformed,
+			placeholders,
+		);
+		return this.#transformed;
 	}
 
 	/**
-	 * Can only be a directory.
-	 * The directory can already exists.
-	 * If it doesn't exist it'll be created during copy process.
-	 *
-	 * @param path path to copy destination
+	 * Copy the transformed file to the destination,
+	 * This function requires properties `#mirror` and `#transformed` to be set,
+	 * `#transformed` can be defined from `transformContentWithPlaceholders()`.
 	 */
-	setDestination(path: string) {
-		const file = new File(path);
-
-		if (file.exists() && file.isFile()) {
+	async copy() {
+		if (!this.#mirror) {
+			throw new Error("mirror wasn't set, can't guess the destination.");
+		}
+		if (!this.#transformed) {
 			throw new Error(
-				'destination path exists and is a file, it should be a directory where to copy the templates.',
+				"transformed wasn't set, please call `transformContentWithPlaceholders` first.",
 			);
 		}
-		// Should create it yet, unless it's really needed
-	}
 
-	// destinationDirpathExists() {
-	// 	if (!this.#destination) {
-	// 		return undefined;
-	// 	}
-	// 	try {
-	// 		const sourceDirname = _dirname(this.#path);
-	// 		// const destinationDirname = _dirname(this.destination);
-	// 		const resolvedDirpath = pathlib.join(this.#destination, sourceDirname);
-	// 		console.log(resolvedDirpath);
-	//
-	// 		return fs.existsSync(resolvedDirpath);
-	// 	} catch (_err) {
-	// 		return undefined;
-	// 	}
-	// }
+		await this.allRoadsLeadToRome();
 
-	// destinationExists() {
-	// 	if (!this.#destination) {
-	// 		return undefined;
-	// 	}
-	// 	try {
-	// 		return fs.existsSync(this.#destination);
-	// 	} catch (_err) {
-	// 		return undefined;
-	// 	}
-	// }
-
-	copy(filename?: string) {
-		throw new Error('To implement');
+		await fs.promises.writeFile(this.#mirror, this.#transformed);
 	}
 }
