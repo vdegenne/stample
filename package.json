@@ -4,6 +4,15 @@
 	"description": "",
 	"type": "module",
 	"main": "./lib/index.js",
+	"module": "./lib/index.js",
+	"types": "./lib/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./lib/index.js",
+			"default": "./lib/index.js",
+			"types": "./lib/index.d.ts"
+		}
+	},
 	"scripts": {
 		"build": "wireit",
 		"test": "wireit"
@@ -52,5 +61,10 @@
 	},
 	"dependencies": {
 		"@inquirer/prompts": "^3.3.0"
-	}
+	},
+	"files": [
+		"/bin",
+		"/lib",
+		"!/lib/test"
+	]
 }
