@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import {glob as _glob} from 'glob';
+import FastGlob from 'fast-glob';
 
 export function basename(filepath: string) {
 	return path.basename(filepath);
@@ -8,6 +8,10 @@ export function basename(filepath: string) {
 
 export function dirname(filepath: string) {
 	return path.dirname(filepath);
+}
+
+export function isAbsolute(filepath: string) {
+	return path.isAbsolute(filepath);
 }
 
 export async function createDirectory(dirpath: string): Promise<void> {
@@ -29,12 +33,8 @@ export function stripBasedir(filepath: string, basedir: string): string {
 	return relativePath;
 }
 
-export function isAbsolute(filepath: string) {
-	return path.isAbsolute(filepath);
-}
-
-export function glob(pattern: string | string[]) {
-	return _glob.sync(pattern);
+export async function glob(source: string | string[], cwd = '.') {
+	return await FastGlob(source, {cwd, absolute: true});
 }
 
 export {path as pathlib};

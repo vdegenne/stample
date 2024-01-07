@@ -4,6 +4,7 @@ import {
 	createDirectory,
 	dirname,
 	glob,
+	pathlib,
 	stripBasedir,
 } from '../paths.js';
 import fs from 'fs';
@@ -101,10 +102,16 @@ describe('Paths module', () => {
 	});
 
 	describe('glob', () => {
-		it('returns all files and directories', async () => {
-			const result = glob('./fixtures/**/*');
-			assert.isTrue(result.length > 4);
-			assert.include(result, 'fixtures/source/a/path');
+		it('returns all files', async () => {
+			const result = await glob('./fixtures/**/*');
+			assert.isTrue(
+				result.some((i) => i.endsWith('fixtures/source/a/path/test.html')),
+			);
+		});
+
+		it('returns absolute paths', async () => {
+			const result = await glob('./fixtures/**/*');
+			assert.isTrue(result.every((i) => i.startsWith('/')));
 		});
 	});
 });

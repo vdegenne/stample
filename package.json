@@ -41,7 +41,7 @@
 		"@types/chai": "^4.3.11",
 		"@types/mocha": "^10.0.6",
 		"chai": "^5.0.0",
-		"glob": "^10.3.10",
+		"fast-glob": "^3.3.2",
 		"mocha": "^10.2.0",
 		"typescript": "^5.3.3",
 		"wireit": "^0.14.1"

@@ -35,17 +35,6 @@ export class File {
 	dirname() {
 		return _dirname(this.#path);
 	}
-
-	resolvePath() {
-		return stripBasedir(this.#path, this.#base);
-	}
-	resolveDirname() {
-		return _dirname(this.resolvePath());
-	}
-	resolveDestinationPath() {
-		return;
-	}
-
 	constructor(path: string, base = '.') {
 		this.#path = path;
 		this.setBase(base);
@@ -176,8 +165,8 @@ export class File {
 		this.#type = this.isFile(force)
 			? 'file'
 			: this.isDirectory()
-			? 'directory'
-			: undefined;
+				? 'directory'
+				: undefined;
 		this.#contents = await this.getContents(force);
 		this.#loaded = true;
 	}
@@ -218,7 +207,7 @@ export class File {
 
 		if (file.exists() && file.isFile()) {
 			throw new Error(
-				'destination path exists and is a file, it should be a directory where to copy the templates.'
+				'destination path exists and is a file, it should be a directory where to copy the templates.',
 			);
 		}
 		// Should create it yet, unless it's really needed

@@ -85,7 +85,7 @@ describe('File', () => {
 			const placeholders = await file.getPlaceholders();
 			assert.deepEqual(
 				placeholders.map((p) => p.name),
-				['TITLE', 'CONTENT']
+				['TITLE', 'CONTENT'],
 			);
 		});
 
@@ -108,38 +108,6 @@ describe('File', () => {
 			assert.equal(file.basename(), 'file.js');
 			file = new File('/this/is/absolute/path');
 			assert.equal(file.basename(), 'path');
-		});
-	});
-
-	describe('resolvePath', () => {
-		it('returns clean paths', async () => {
-			let file: File;
-			file = new File('./fixtures/a/path');
-			assert.equal(file.resolvePath(), 'fixtures/a/path');
-			file = new File('./fixtures/a/path/');
-			assert.equal(file.resolvePath(), 'fixtures/a/path');
-			file = new File('./fixtures/path/to/file.js');
-			assert.equal(file.resolvePath(), 'fixtures/path/to/file.js');
-			file = new File('../file.js');
-			assert.equal(file.resolvePath(), '../file.js');
-		});
-
-		it('resolves based on path', async () => {
-			let file: File;
-			file = new File('./fixtures/a/path', './fixtures');
-			assert.equal(file.resolvePath(), 'a/path');
-			file = new File('./fixtures/a/path', '.');
-			assert.equal(file.resolvePath(), 'fixtures/a/path');
-			file = new File('./fixtures/a/path', './');
-			assert.equal(file.resolvePath(), 'fixtures/a/path');
-			file = new File('./fixtures/a/path', 'fixtures');
-			assert.equal(file.resolvePath(), 'a/path');
-			file = new File('./fixtures/a/path', 'fixtures/a');
-			assert.equal(file.resolvePath(), 'path');
-			// file = new File('/absolute/path/to/file.js', '.');
-			// assert.equal(file.resolvePath(), 'path');
-			file = new File('../shared/templates/README.md', './fixtures');
-			assert.equal(file.resolvePath(), 'path');
 		});
 	});
 
