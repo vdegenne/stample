@@ -134,7 +134,7 @@ describe('placeholders.ts', () => {
 				newSet.map((p) => p.name),
 				['foo', 'bar'],
 			);
-			assert.equal(newSet[0].resolveTo, 'Hello');
+			assert.equal(newSet[0].value, 'Hello');
 		});
 	});
 });

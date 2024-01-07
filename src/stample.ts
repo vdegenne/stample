@@ -2,7 +2,12 @@ import {glob} from './paths.js';
 import pathlib from 'path';
 import fs from 'fs';
 import {File} from './File.js';
-import {Placeholder, makePlaceholdersDistinct} from './placeholders.js';
+import {
+	Placeholder,
+	askUserForPlaceHolders,
+	makePlaceholdersDistinct,
+	mergePlaceholders,
+} from './placeholders.js';
 
 /**
  * Mirror the files matched by the globs from source to destination
@@ -27,26 +32,34 @@ export async function stampleInit(
 
 	const files = mirrors.map((m) => new File(m.original, m.mirror));
 	return files;
+}
+
+export async function stample(
+	source: string,
+	destination: string,
+	globs: string[],
+	placeholders: Placeholder[] = [],
+	noUserInteraction = false,
+) {
+	const files = await stampleInit(source, destination, globs);
 	const filePlaceholders = await extractAllPlaceholdersFromFilesList(files);
-	// const mergedPlaceholders = mergePlaceholders(
-	// 	filePlaceholders,
-	// 	placeholders ?? [],
-	// );
-	// const unresolvedPlaceholders = mergedPlaceholders.filter(
-	// 	(p) => p.resolveTo == undefined,
-	// );
-	return;
+	for (const ph of placeholders) {
+		const filePh = filePlaceholders.find((p) => p.raw == ph.raw);
+		if (filePh && ph.value) {
+			filePh.value = ph.value;
+		}
+	}
+	if (
+		filePlaceholders.some((p) => p.value === undefined) &&
+		!noUserInteraction
+	) {
+		await askUserForPlaceHolders(filePlaceholders);
+	}
 
-	await Promise.all(
-		[...dirs].map((dir) => fs.promises.mkdir(dir, {recursive: true})),
-	);
+	await transformAllFiles(files, filePlaceholders);
+	await copyAllFile(files);
 
-	await Promise.all(
-		mirrors.map(async ({original, mirror}) => {
-			// Overwrites by default.
-			await fs.promises.copyFile(original, mirror);
-		}),
-	);
+	return files;
 }
 
 /**
@@ -64,27 +77,27 @@ export async function transformAllFiles(
 	files: File[],
 	placeholders: Placeholder[],
 ) {
-	if (files.length === 0) {
+	if (files.length == 0) {
 		return;
 	}
-	const missingResolutionValue = placeholders.filter((p) => !p.resolveTo);
+	const missingResolutionValue = placeholders.filter((p) => !p.value);
 	if (missingResolutionValue.length > 0) {
 		throw new Error(
-			`Some placeholders are missing a resolution value, transformation aborted. (Missing values: ${missingResolutionValue.join(
-				', ',
-			)})`,
+			`Some placeholders are missing a resolution value, transformation aborted. (Missing values: ${missingResolutionValue
+				.map((p) => p.name)
+				.join(', ')})`,
 		);
 	}
 	const filePlaceholders = await extractAllPlaceholdersFromFilesList(files);
 	// Throws if some placeholders in the files were not provided
 	const missingFilePlaceholders = filePlaceholders.filter(
-		(p) => !placeholders.some((q) => q.value == p.value),
+		(p) => !placeholders.some((q) => q.raw == p.raw),
 	);
 	if (missingFilePlaceholders.length > 0) {
 		throw new Error(
-			`Some file placeholders were not provided in the placeholders passed argument. (Missing values: ${missingFilePlaceholders.join(
-				', ',
-			)})`,
+			`Some file placeholders were not provided in the placeholders passed argument. (Missing values: ${missingFilePlaceholders
+				.map((p) => p.name)
+				.join(', ')})`,
 		);
 	}
 

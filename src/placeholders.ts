@@ -7,23 +7,23 @@ export class Placeholder {
 	/**
 	 * Raw placeholder value, e.g. '%TITLE%'
 	 */
-	value: string;
+	raw: string;
 
 	/**
 	 * Name of the placeholder, e.g. `TITLE`
 	 * It is usually the `placeholder` value without the surrounding %'s
 	 */
 	get name() {
-		return this.value.replaceAll('%', '').trim();
+		return this.raw.replaceAll('%', '').trim();
 	}
 	/**
 	 * Used to determine what to replace placeholder with in transform functions.
 	 */
-	resolveTo?: string;
+	value?: string;
 
-	constructor(value: string, resolveTo?: string) {
+	constructor(raw: string, value?: string) {
+		this.raw = raw;
 		this.value = value;
-		this.resolveTo = resolveTo;
 	}
 }
 
@@ -45,10 +45,10 @@ export function mergePlaceholders(set1: Placeholder[], set2: Placeholder[]) {
 export function makePlaceholdersDistinct(placeholders: Placeholder[]) {
 	const distinct: Placeholder[] = [];
 	for (const p of placeholders) {
-		let alreadyExist = distinct.find((q) => q.value == p.value);
+		let alreadyExist = distinct.find((q) => q.raw == p.raw);
 		if (alreadyExist) {
-			if (!alreadyExist.resolveTo && p.resolveTo) {
-				alreadyExist.resolveTo = p.resolveTo;
+			if (!alreadyExist.value && p.value) {
+				alreadyExist.value = p.value;
 			}
 			continue;
 		} else {
@@ -60,17 +60,18 @@ export function makePlaceholdersDistinct(placeholders: Placeholder[]) {
 
 /**
  * Take a PlaceholderInfo array and ask user for all placeholder values.
- * User value will be written in `resolveTo` field of info objects.
+ * User value will be written in `value` field of info objects.
  *
  * @param placeholders List of placeholders to resolve
  */
 export async function askUserForPlaceHolders(placeholders: Placeholder[]) {
-	const map: Placeholder[] = [];
-	for (const placeholder of placeholders) {
-		const answer = await input({
-			message: placeholder.name,
-		});
-		placeholder.resolveTo = answer;
+	for (const ph of placeholders) {
+		if (ph.value == undefined) {
+			const answer = await input({
+				message: ph.name,
+			});
+			ph.value = answer;
+		}
 	}
 }
 
@@ -79,10 +80,10 @@ export function transformContentWithPlaceholders(
 	placeholders: Placeholder[],
 ) {
 	for (const placeholder of placeholders) {
-		if (!placeholder.resolveTo) {
+		if (!placeholder.value) {
 			return;
 		}
-		content = content.replaceAll(placeholder.value, placeholder.resolveTo);
+		content = content.replaceAll(placeholder.raw, placeholder.value);
 	}
 	return content;
 }

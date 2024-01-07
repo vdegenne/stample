@@ -3,9 +3,10 @@ import {
 	copyAllFile,
 	extractAllPlaceholdersFromFilesList,
 	getFileForFilename,
+	stample,
 	stampleInit,
 	transformAllFiles,
-} from '../Manager.js';
+} from '../stample.js';
 import {createTestDir, removeTestDir} from './utils.js';
 import {File} from '../File.js';
 import {Placeholder} from '../placeholders.js';
@@ -68,7 +69,7 @@ describe('Manager', () => {
 		it("throws if some placeholders in files weren't supplied", async () => {
 			const files = await stampleInit('./fixtures', 'test-temp-dir', '**/*');
 			const placeholders = await extractAllPlaceholdersFromFilesList(files);
-			placeholders.forEach((p) => (p.resolveTo = 'test'));
+			placeholders.forEach((p) => (p.value = 'test'));
 			// Intentionally delete a value for the test
 			delete placeholders[0];
 
@@ -88,7 +89,7 @@ describe('Manager', () => {
 		it('transforms file if conditions are met', async () => {
 			const files = await stampleInit('./fixtures', 'test-temp-dir', '**/*');
 			const placeholders = await extractAllPlaceholdersFromFilesList(files);
-			placeholders.forEach((p) => (p.resolveTo = `(${p.name})`));
+			placeholders.forEach((p) => (p.value = `(${p.name})`));
 
 			let err: Error | undefined;
 			try {
@@ -122,7 +123,7 @@ describe('Manager', () => {
 		it('copies otherwise', async () => {
 			const files = await stampleInit('./fixtures', 'test-temp-dir', '**/*');
 			const placeholders = await extractAllPlaceholdersFromFilesList(files);
-			placeholders.forEach((p) => (p.resolveTo = `(${p.name})`));
+			placeholders.forEach((p) => (p.value = `(${p.name})`));
 
 			let err: Error | undefined;
 			try {
@@ -144,6 +145,59 @@ describe('Manager', () => {
 				await fs.promises.readFile(oneFilePath.mirror)
 			).toString();
 			expect(content).to.contain(`<title>(TITLE)</title>`);
+		});
+	});
+
+	describe('Stample', () => {
+		it('fails if some placeholders in file could not be resolved', async () => {
+			const source = './fixtures';
+			const destination = './test-temp-dir';
+			const globs = ['**/*.txt', '**/*.html'];
+			const placeholders = [];
+
+			let err: Error | undefined;
+			try {
+				await stample(source, destination, globs, placeholders, true);
+			} catch (error) {
+				err = error;
+			}
+
+			expect(err).to.be.an('error');
+			expect(err.message).to.contain('Some placeholders are missing');
+		});
+
+		it('works', async () => {
+			const source = './fixtures';
+			const destination = './test-temp-dir';
+			const globs = ['**/*.txt', '**/*.html'];
+			const placeholders = [
+				new Placeholder('%name%', 'John'),
+				new Placeholder('%day%', 'Tuesday'),
+				new Placeholder('%TITLE%', 'My Page'),
+				new Placeholder('%CONTENT%', 'Nice'),
+			];
+
+			let err: Error | undefined;
+			let files!: File[];
+			try {
+				files = await stample(source, destination, globs, placeholders, true);
+			} catch (error) {
+				err = error;
+			}
+
+			expect(err).to.be.undefined;
+			expect(files).to.be.an('array');
+			const file = files.find((f) => f.mirror.endsWith('a/path/test.html'))!;
+			const content = (await fs.promises.readFile(file.mirror)).toString();
+			expect(content).to.equal(`<!doctype html>
+<html>
+	<head>
+		<title>My Page</title>
+	</head>
+	<body>
+		Nice
+	</body>
+</html>\n`);
 		});
 	});
 });
