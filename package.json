@@ -37,6 +37,10 @@
 	},
 	"author": "Valentin Degenne",
 	"license": "MIT",
+	"bin": {
+		"stample": "./bin/stample.js",
+		"stpl": "./bin/stample.js"
+	},
 	"devDependencies": {
 		"@types/chai": "^4.3.11",
 		"@types/mocha": "^10.0.6",

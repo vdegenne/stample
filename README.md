@@ -1,6 +1,6 @@
 # Stample
 
-Mini templating copy program
+Mini tree mirroring tool with placeholders replacement capabilities.
 
 ## Usage
 
@@ -10,12 +10,14 @@ Mini templating copy program
 sudo npm i -g stample
 ```
 
+### Example
+
 Let say we have
 
 `../shared/templates/index.html`:
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html>
 	<head>
 		<title>%title%</title>
@@ -29,35 +31,27 @@ Let say we have
 Using Stample we can easily copy this template somewhere else and resolves the placeholders:
 
 ```bash
-stample --base ../shared/templates/ ../shared/templates/index.html .
+stample ../shared/templates . 'index.html'
 ```
 
-Stample will prompt you to enter a value for `%title%` and `%content%`, will transform the file according to these values and will copy the html file to the final destination (which is the current directory in this example (`.`)).
+The command will prompt for `%title%` and `%content%`.
 
-(`--base` here is used to determine the base path of the sources we want to copy).
-
-### More examples
+Placeholders can also be passed through the command directly to bypass user interaction, for instance
 
 ```bash
-stample --base templates templates/model.ts src
+stample ../shared/templates . 'index.html' -title='My cool app' -content='<h1>Hello</h1>'
 ```
 
-copy `model.ts` to `src` directory
+### Glob patterns
 
----
+Stample revolves around glob patterns, for instance
 
 ```bash
-stample --base templates templates/a/model.ts templates/b/model.ts src
+stample ./coding-templates/webdev ./src/ '**/*.ts' '**/*.html'
 ```
 
-copy `a/model.ts` and `b/model.ts` to `src` directory
+The command above will copy all TypeScript and HTML files from base `./coding-templates/webdev` to/in `src` with their respective paths.
 
----
+## License
 
-Also works with glob patterns
-
-```bash
-stample --base templates templates/**/*.ts src
-```
-
-copy all TypeScript files from `templates` directory to `src` with their respective path (e.g. `a/module.ts`, `a/sub/module.ts`, `b/module.ts`, etc...)
+MIT License (C) Valentin Degenne
