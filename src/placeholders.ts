@@ -32,29 +32,9 @@ export function extractPlaceholdersFromContent(content: string): Placeholder[] {
 	const matches = content.matchAll(PLACEHOLDER_REGEX);
 	for (const match of matches) {
 		const value = match[0];
-		if (placeholders.some((p) => p.value == value)) {
-			continue;
-		}
 		placeholders.push(new Placeholder(value));
 	}
-	return placeholders;
-}
-
-/**
- * Takes a list of File objects and returns all placeholders found.
- */
-export async function extractAllPlaceholdersFromFilesList(files: File[]) {
-	const placeholders: Placeholder[] = [];
-	for (const file of files) {
-		const phs = await file.extractPlaceholders();
-		for (const ph of phs) {
-			if (placeholders.some((p) => p.name === ph.name)) {
-				continue;
-			}
-			placeholders.push(ph);
-		}
-	}
-	return placeholders;
+	return makePlaceholdersDistinct(placeholders);
 }
 
 export function mergePlaceholders(set1: Placeholder[], set2: Placeholder[]) {
@@ -76,13 +56,6 @@ export function makePlaceholdersDistinct(placeholders: Placeholder[]) {
 		}
 	}
 	return distinct;
-}
-
-export function getMissingPlaceholdersFromContent(
-	content: string,
-	placeholders: Placeholder[],
-) {
-	// const placeholdersFromContent =
 }
 
 /**

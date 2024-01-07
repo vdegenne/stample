@@ -1,7 +1,6 @@
 import {assert} from 'chai';
 import {
 	Placeholder,
-	extractAllPlaceholdersFromFilesList,
 	extractPlaceholdersFromContent,
 	mergePlaceholders,
 	transformContentWithPlaceholders,
@@ -84,18 +83,6 @@ describe('placeholders.ts', () => {
 		});
 	});
 
-	it('returns all placeholders from Files', async () => {
-		const files = [
-			new File('./fixtures/test.js'),
-			new File('./fixtures/test.html'),
-		];
-
-		const results = await extractAllPlaceholdersFromFilesList(files);
-		assert.deepEqual(
-			results.map((r) => r.name),
-			['var_name', 'comment', 'TITLE', 'CONTENT'],
-		);
-	});
 	describe('Merging', () => {
 		it('performs basic merging', async () => {
 			const set1: Placeholder[] = [
