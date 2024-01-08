@@ -2,9 +2,9 @@ import {stample} from './stample.js';
 import {processArgs} from './args.js';
 
 export async function cli() {
-	let [, , _source, _destination, _globs, ...rest] = process.argv;
+	const [, , _source, _destination, ...rest] = process.argv;
 
-	if (!_source || !_destination || _globs.length === 0) {
+	if (!_source || !_destination || rest.length === 0) {
 		console.error(`
 USAGE
     stample SOURCE DEST GLOB1 [GLOB2, ...] [-<placeholder-name>=<placeholder-value>, ...]
@@ -29,7 +29,6 @@ EXAMPLES
 	let {source, destination, globs, placeholders} = processArgs([
 		_source,
 		_destination,
-		..._globs,
 		...rest,
 	]);
 

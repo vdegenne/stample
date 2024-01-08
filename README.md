@@ -28,10 +28,10 @@ Let say we have
 </html>
 ```
 
-Using Stample we can easily copy this template somewhere else and resolves the placeholders:
+With Stample we can easily copy this template somewhere else and resolve the placeholders:
 
 ```bash
-stample ../shared/templates . 'index.html'
+stample ../shared/templates . index.html
 ```
 
 The command will prompt for `%title%` and `%content%`.
@@ -39,7 +39,7 @@ The command will prompt for `%title%` and `%content%`.
 Placeholders can also be passed through the command directly to bypass user interaction, for instance
 
 ```bash
-stample ../shared/templates . 'index.html' -title='My cool app' -content='<h1>Hello</h1>'
+stample ../shared/templates . index.html -title='My cool app' -content='<h1>Hello</h1>'
 ```
 
 ### Glob patterns
@@ -50,8 +50,10 @@ Stample revolves around glob patterns, for instance
 stample ./coding-templates/webdev ./src/ '**/*.ts' '**/*.html'
 ```
 
+**Note that: globs needs to be surrounded in quotes (singles or doubles)**
+
 The command above will copy all TypeScript and HTML files from base `./coding-templates/webdev` to/in `src` with their respective paths.
 
 ## License
 
-MIT License (C) Valentin Degenne
+2023-2024 (C) MIT License. Valentin Degenne
