@@ -1,7 +1,7 @@
 {
 	"name": "stample",
-	"version": "1.0.1",
-	"description": "",
+	"version": "1.0.2",
+	"description": "Mini tree mirroring tool with placeholders replacement capabilities.",
 	"type": "module",
 	"main": "./lib/index.js",
 	"module": "./lib/index.js",
@@ -46,6 +46,16 @@
 	},
 	"author": "Valentin Degenne",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/vdegenne/stample"
+	},
+	"keywords": [
+		"templates",
+		"placeholders",
+		"copy",
+		"npm"
+	],
 	"bin": {
 		"stample": "./bin/stample.js",
 		"stpl": "./bin/stample.js"
