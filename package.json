@@ -1,6 +1,6 @@
 {
 	"name": "stample",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "Mini tree mirroring tool with placeholders replacement capabilities.",
 	"type": "module",
 	"main": "./lib/index.js",

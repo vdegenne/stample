@@ -3,8 +3,6 @@
 	Mini tree mirroring tool with placeholders replacement capabilities.
 </div>
 
-
-
 ## Usage
 
 ### Install
@@ -13,6 +11,14 @@
 sudo npm i -g stample
 ```
 
+### Command
+
+```bash
+stample SOURCE DEST GLOB1 [GLOB2, ...] [-<placeholder-name>=<placeholder-value>, ...]
+```
+
+_(short version `stpl` is also available.)_
+
 ### Example
 
 Let say we have
@@ -20,7 +26,7 @@ Let say we have
 `../shared/templates/index.html`:
 
 ```html
-<!doctype html>
+<!DOCTYPE html>
 <html>
 	<head>
 		<title>%title%</title>
@@ -31,7 +37,7 @@ Let say we have
 </html>
 ```
 
-With Stample we can easily copy this template somewhere else and resolve the placeholders:
+With Stample we can easily copy this template somewhere else on the filesystem along with resolving the placeholders:
 
 ```bash
 stample ../shared/templates . index.html
@@ -42,8 +48,10 @@ The command will prompt for `%title%` and `%content%`.
 Placeholders can also be passed through the command directly to bypass user interaction, for instance
 
 ```bash
-stample ../shared/templates . index.html -title='My cool app' -content='<h1>Hello</h1>'
+stample ../shared/templates . index.html -title=MyCoolApp -content='<h1>Hello</h1>'
 ```
+
+###
 
 ### Glob patterns
 
@@ -53,9 +61,13 @@ Stample revolves around glob patterns, for instance
 stample ./coding-templates/webdev ./src/ '**/*.ts' '**/*.html'
 ```
 
-**Note that: globs needs to be surrounded in quotes (singles or doubles)**
-
 The command above will copy all TypeScript and HTML files from base `./coding-templates/webdev` to/in `src` with their respective paths.
+
+**Note that: globs need to be surrounded in quotes (singles or doubles)**
+
+## Help
+
+Use `stample` without any arguments to see the help in the command line.
 
 ## License
 
