@@ -1,6 +1,9 @@
-# Stample
+<div align="center">
+	<img src="https://github.com/vdegenne/stample/assets/2827383/900f945b-998f-4be9-ac61-c14eef3ba6f7" width=260 /><br>
+	Mini tree mirroring tool with placeholders replacement capabilities.
+</div>
 
-Mini tree mirroring tool with placeholders replacement capabilities.
+
 
 ## Usage
 
