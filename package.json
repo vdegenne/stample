@@ -1,6 +1,6 @@
 {
 	"name": "stample",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"description": "Mini tree mirroring tool with placeholders replacement capabilities.",
 	"type": "module",
 	"main": "./lib/index.js",
@@ -64,13 +64,13 @@
 		"@types/chai": "^4.3.11",
 		"@types/mocha": "^10.0.6",
 		"chai": "^5.0.0",
-		"fast-glob": "^3.3.2",
 		"mocha": "^10.2.0",
 		"typescript": "^5.3.3",
 		"wireit": "^0.14.1"
 	},
 	"dependencies": {
-		"@inquirer/prompts": "^3.3.0"
+		"@inquirer/prompts": "^3.3.0",
+		"fast-glob": "^3.3.2"
 	},
 	"files": [
 		"/bin",
