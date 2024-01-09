@@ -246,7 +246,7 @@ export class File {
 		if (!this.#mirror) {
 			throw new Error("mirror wasn't set, can't guess the destination.");
 		}
-		if (!this.#transformed) {
+		if (this.#transformed == undefined) {
 			throw new Error(
 				"transformed wasn't set, please call `transformContentWithPlaceholders` first.",
 			);
