@@ -180,7 +180,7 @@ export class File {
 			await this.preload();
 		}
 		const content = this.#contents;
-		if (!content) {
+		if (content == undefined) {
 			return;
 		}
 
