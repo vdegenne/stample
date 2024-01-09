@@ -1,7 +1,8 @@
 import {input} from '@inquirer/prompts';
 import type {File} from './File.js';
 
-export const PLACEHOLDER_REGEX = /\%([^%]+)\%/g;
+export const PLACEHOLDER_REGEX =
+	/%([^%\n\r\x00-\x08\x0B\x0C\x0E-\x1F\u0080-\uFFFF]{1,20})%/g;
 
 export class Placeholder {
 	/**

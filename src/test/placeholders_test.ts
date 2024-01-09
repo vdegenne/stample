@@ -1,4 +1,4 @@
-import {assert} from 'chai';
+import {assert, expect} from 'chai';
 import {
 	Placeholder,
 	extractPlaceholdersFromContent,
@@ -16,6 +16,24 @@ describe('placeholders.ts', () => {
 				placeholders.map((p) => p.name),
 				['TEST'],
 			);
+		});
+
+		it("doesn't match if placeholder has line breaks", async () => {
+			let content = '%test\nasf%';
+			const placeholders = extractPlaceholdersFromContent(content);
+			expect(placeholders).to.be.empty;
+		});
+
+		it("doesn't match if placeholder is longer than 20 characters", async () => {
+			let content = '%0123456789abcdefghijk%';
+			const placeholders = extractPlaceholdersFromContent(content);
+			expect(placeholders).to.be.empty;
+		});
+
+		it("doesn't match if placeholder contains unicode characters", async () => {
+			let content = '%\x055\x008%';
+			const placeholders = extractPlaceholdersFromContent(content);
+			expect(placeholders).to.be.empty;
 		});
 
 		it('finds multiple placeholders in content', () => {
