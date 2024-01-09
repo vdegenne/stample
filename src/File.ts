@@ -222,11 +222,11 @@ export class File {
 		if (!this.exists()) {
 			return;
 		}
-		if (!this.#contents) {
+		if (this.#contents == undefined) {
 			await this.preload();
 		}
 		const content = this.#contents;
-		if (!content) {
+		if (content == undefined) {
 			return;
 		}
 		this.#transformed = content;
