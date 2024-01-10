@@ -1,13 +1,26 @@
 import {assert, expect} from 'chai';
 import {
 	Placeholder,
+	Placeholders,
 	extractPlaceholdersFromContent,
 	mergePlaceholders,
 	transformContentWithPlaceholders,
 } from '../placeholders.js';
-import {File} from '../File.js';
 
 describe('placeholders.ts', () => {
+	describe('Placeholder class', () => {
+		it('can manage multiple placeholder objects', async () => {
+			const manager = new Placeholders(
+				new Placeholder('%test%'),
+				new Placeholder('%test2%'),
+				[new Placeholder('%test3%', 'haha')],
+			);
+
+			expect(manager.placeholders.length).to.equal(3);
+			expect(manager.get('test3').value == 'haha3');
+		});
+	});
+
 	describe('extractPlaceholdersFromContent', () => {
 		it('finds simple placeholder in content', () => {
 			const content = '%TEST%';

@@ -1,8 +1,21 @@
 import {input} from '@inquirer/prompts';
-import type {File} from './File.js';
 
 export const PLACEHOLDER_REGEX =
 	/%([^%\n\r\x00-\x08\x0B\x0C\x0E-\x1F\u0080-\uFFFF]{1,20})%/g;
+
+export class Placeholders {
+	placeholders: Placeholder[] = [];
+
+	constructor(...placeholders: (Placeholder | Placeholder[])[]) {
+		this.placeholders = placeholders.flat();
+	}
+
+	get(placeholderName: string) {
+		return this.placeholders.find(
+			(p) => p.name == placeholderName || p.raw == placeholderName,
+		);
+	}
+}
 
 export class Placeholder {
 	/**
