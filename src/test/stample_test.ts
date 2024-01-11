@@ -23,7 +23,7 @@ describe('Manager', () => {
 	describe('init', () => {
 		it('loads files accordingly to glob patterns', async () => {
 			const files = await stampleInit('./fixtures', 'test-temp-dir', '**/*');
-			expect(files.length).to.equal(4);
+			expect(files.length).to.equal(5);
 		});
 
 		it('sets the mirror value on files', async () => {
@@ -39,6 +39,7 @@ describe('Manager', () => {
 			const files = await stampleInit('./fixtures', 'test-temp-dir', '**/*');
 			const placeholders = await extractAllPlaceholdersFromFilesList(files);
 			expect(placeholders.map((p) => p.name)).to.deep.equal([
+				'title',
 				'name',
 				'day',
 				'TITLE',

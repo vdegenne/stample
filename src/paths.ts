@@ -23,7 +23,7 @@ export async function createDirectory(dirpath: string): Promise<void> {
 }
 
 export async function glob(source: string | string[], cwd = '.') {
-	return await FastGlob(source, {cwd, absolute: true});
+	return await FastGlob(source, {cwd, absolute: true, dot: true});
 }
 
 export {path as pathlib};

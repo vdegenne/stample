@@ -1,4 +1,4 @@
-import {assert} from 'chai';
+import {assert, expect} from 'chai';
 import {basename, createDirectory, dirname, glob} from '../paths.js';
 import fs from 'fs';
 import {createTestDir, removeTestDir} from './utils.js';
@@ -58,11 +58,13 @@ describe('Paths module', () => {
 	});
 
 	describe('glob', () => {
-		it('returns all files', async () => {
+		it('returns all files (including hidden files)', async () => {
 			const result = await glob('./fixtures/**/*');
+
 			assert.isTrue(
 				result.some((i) => i.endsWith('fixtures/source/a/path/test.html')),
 			);
+			expect(result.length).to.equal(5);
 		});
 
 		it('returns absolute paths', async () => {
